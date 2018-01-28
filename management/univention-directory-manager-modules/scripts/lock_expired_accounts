@@ -89,11 +89,8 @@ disabled."""
 
 	for entry in results:
 		entry.open()
-		if not entry['locked'] in ('posix', 'all'):
-			if entry['locked'] == 'none':
-				entry['locked'] = 'posix'
-			else:
-				entry['locked'] = 'all'
+		if entry['locked'] == '0':
+			entry['locked'] = '1'
 		else:
 			# account is already locked
 			continue

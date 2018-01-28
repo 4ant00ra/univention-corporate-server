@@ -65,5 +65,5 @@ def lock(userdn, lock_timestamp):
 	object = module.object(co, lo, pos, userdn)
 
 	object.open()
-	object['locked'] = "all"
+	object['locked'] = "1"
 	dn = object.modify()
