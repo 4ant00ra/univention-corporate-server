@@ -1340,6 +1340,16 @@ def unmapDisabled(oldattr):
 	return '0'
 
 
+def inconsistentDisabledState(oldattr):
+	disabled = [
+		unmapSambaDisabled(oldattr),
+		unmapKerberosDisabled(oldattr),
+		unmapPosixDisabled(oldattr),
+		isPosixLocked(oldattr),
+	]
+	return all(disabled) if any(disabled) else True
+
+
 def unmapSambaDisabled(oldattr):
 	flags = oldattr.get('sambaAcctFlags', None)
 	if flags:
@@ -1367,6 +1377,10 @@ def unmapLocked(oldattr):
 	if isSambaLocked(oldattr) or isKerberosLocked(oldattr):  # or isLDAPLocked(oldattr)
 		return '1'
 	return '0'
+
+
+def inconsistentLockedState(oldattr):
+	return isSambaLocked(oldattr) ^ isKerberosLocked(oldattr)
 
 
 def isPosixLocked(oldattr):
@@ -1667,7 +1681,13 @@ class object(univention.admin.handlers.simpleLdap, mungeddial.Support):
 		else:
 			self.info['userCertificate'] = ''
 
-#	def hasChanged(self, key):
+	def hasChanged(self, key):
+		if key == 'disabled' and inconsistentDisabledState(self.oldattr):
+			return True
+		if key == 'locked' and inconsistentLockedState(self.oldattr):
+			return True
+		return super(object, self).hasChanged(key)
+
 #		if key == 'disabled':
 #			acctFlags = univention.admin.samba.acctFlags(self.oldattr.get("sambaAcctFlags", [''])[0]).decode()
 #			krb5Flags = self.oldattr.get('krb5KDCFlags', [])
